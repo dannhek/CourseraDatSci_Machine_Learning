@@ -124,7 +124,7 @@ Models were evaluated on two key criteria:
 
 ##Model 1: Simple RPart Tree
 Model 1 is an rpart tree using the `rpart` function and library. 
-```{r model1, cache=FALSE}
+```{r model1, cache=TRUE}
 accuracy <- function(values,prediction){sum((prediction == values))/length(values)}
 model1 <- rpart(classe~.,data=trainData,method="class")
 
@@ -134,7 +134,7 @@ data.frame(training_set = accuracy(trainData$classe,predict(model1,newdata=train
 
 ##Model 2: Simple CTree
 Model 2 is another tree model, built using the `ctree` and `caret` libraries.
-```{r model2}
+```{r model2, cache=TRUE}
 model2 <- train(classe~.,data=trainData,method="ctree")
 data.frame(training_set = accuracy(trainData$classe,predict(model2,newdata=trainData)),
          validation_set = accuracy(validData$classe,predict(model2,newdata=validData)))
@@ -152,8 +152,8 @@ data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=train
 Of the 3 Models Evaluated, Model 2, CTree without PCA, performed the best on the validation set. 
 ```{r results, cache=FALSE,results="asis"}
 bestModel <- model2
-print(xtable(table(trainData$classe,predict(bestModel,newdata=trainData,type="class")),caption="Performance in Training Set"),type="html")
-print(xtable(table(testData$classe,predict(bestModel,newdata=testData,type="class")),caption="Performance in Test Set"),type="html")
+print(xtable(table(trainData$classe,predict(bestModel,newdata=trainData)),caption="Performance in Training Set"),type="html")
+print(xtable(table(testData$classe,predict(bestModel,newdata=testData)),caption="Performance in Test Set"),type="html")
 
 print(xtable(data.frame(training_accuracy = 
                  accuracy(trainData$classe,predict(bestModel,newdata=trainData,type="class")),
