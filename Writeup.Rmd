@@ -1,0 +1,169 @@
+---
+title: "Machine Learning Data Science"
+author: "Dann Hekman"
+date: "November 18, 2015"
+output: html_document
+---
+
+```{r init_Libraries, echo=FALSE, results="hide", cache=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2); library(caret); library(scatterplot3d); library(RColorBrewer)
+library(rpart); library(rattle); library(xtable)
+setwd('~/Coursera/Machine Learning')
+#Load Data
+if (!file.exists('./data/train.csv')) {
+     trainURL<-'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv'
+     dir.create('./data/')
+     download.file(trainURL,method='auto',destfile='./data/train.csv')
+}
+```
+#Introduction and Study Design
+This model was built for the [Coursera](www.coursera.org) Practical Machine Learning class project, part of [Data Science Specialization](https://www.coursera.org/specializations/jhudatascience) taught by Professors [Jeff Leek](https://github.com/jtleek), [Roger Peng](https://github.com/rdpeng), and [Brian Caffo](https://github.com/bcaffo).
+
+Data come from sensors used while weightlifting, and we will use these sensors to predict if the particpants were using the excersize correctly (`classe='A'`) or doing one of 4 common mistakes (`classe = 'B', 'C', 'D', or 'E'`). 
+
+
+
+##Data Partitioning
+This study uses separate training, validation, and testing datasets, with 20% of the data in the test set, 16% in the validation set, and 64% of the data in the training set. 
+```{r loadData_1, results="hide",cache=TRUE}
+set.seed(1337)
+allData  <- read.csv('./data/train.csv')
+inTest   <- createDataPartition(y=allData$X,p=.2,list=FALSE)
+testData <- allData[inTest,]
+trainData<- allData[-inTest,]
+inValid  <- createDataPartition(y=trainData$X,p=.2,list=FALSE) #.8*.2=16% of allData
+validData<- trainData[inValid,]
+trainData<- trainData[-inValid,]
+```
+
+##Data Preparation
+To minimize overfitting to outliers, any variables that were 75% null, blank, or NA were removed from the training set. 
+```{r trainSet_1, results="hide",cache=TRUE}
+##Remove Columns where more than 75% are blank
+trainData<-trainData[,sapply(trainData,function(x) (length(x[x != ""])>(0.75*nrow(trainData))))]
+##Remove Columns where more than 75% are NA
+trainData<-trainData[,sapply(trainData,function(x) (length(x[!is.na(x)])>(0.75*nrow(trainData))))]
+```
+```{r trainSet_2, echo=FALSE, results="hide",cache=TRUE}
+##Split out predicting and non-predicting columns
+          trainInfo <- trainData[,(names(trainData) %in% c("X","user_name","raw_timestamp_part_1","raw_timestamp_part_2","cvtd_timestamp","new_window","num_window","classe"))]
+          trainData <- trainData[,!(names(trainData) %in% c("X","user_name","raw_timestamp_part_1","raw_timestamp_part_2","cvtd_timestamp","new_window","num_window"))]
+
+#Color Brewer
+col<-brewer.pal(5,"RdYlBu")
+names(col)=c('A','B','C','D','E')
+col2<-col[trainData$classe] ; names(col2)<-NULL
+```
+
+#Exploratory Data Analysis
+Three-dimensional scatter plots were constructed to explore the data. Each plot shows the spacial movement from the gyroscope from one of the 4 sensors.
+```{r expl_Belt, echo=FALSE, cache=TRUE}
+belScatter <-scatterplot3d(x=trainData$gyros_belt_x
+             ,y=trainData$gyros_belt_y
+             ,z=trainData$gyros_belt_z
+             ,xlab="Movement on X axis"
+             ,ylab="Movement on Y axis"
+             ,zlab="Movement on Z axis"
+             ,type='p'
+             ,pch=19
+             ,color=col2
+             ,main='Class by Belt Movement')
+legend(belScatter$xyz.convert(3,4,-2), col=col, yjust=0,
+       legend=c("A","B","C","D","E"), cex=0.5, lwd=2)
+```
+```{r expl_Arm, echo=FALSE, cache=TRUE}
+armScatter <-scatterplot3d(x=trainData$gyros_arm_x
+             ,y=trainData$gyros_arm_y
+             ,z=trainData$gyros_arm_z
+             ,xlab="Movement on X axis"
+             ,ylab="Movement on Y axis"
+             ,zlab="Movement on Z axis"
+             ,type='p'
+             ,pch=19
+             ,color=col2
+             ,main='Class by Arm Movement')
+legend(armScatter$xyz.convert(3,4,-2), col=col, yjust=0,
+       legend=c("A","B","C","D","E"), cex=0.5, lwd=2)
+```
+```{r expl_Dumbbell, echo=FALSE}
+dumScatter <-scatterplot3d(x=trainData$gyros_dumbbell_x
+             ,y=trainData$gyros_dumbbell_y
+             ,z=trainData$gyros_dumbbell_z
+             ,xlab="Movement on X axis"
+             ,ylab="Movement on Y axis"
+             ,zlab="Movement on Z axis"
+             ,type='p'
+             ,pch=19
+             ,color=col2
+             ,main='Class by Dumbell Movement')
+legend(dumScatter$xyz.convert(3,4,-2), col=col, yjust=0,
+       legend=c("A","B","C","D","E"), cex=0.5, lwd=2)
+```
+```{r expl_forearm, echo=FALSE, cache=TRUE}
+forScatter <-scatterplot3d(x=trainData$gyros_forearm_x
+             ,y=trainData$gyros_forearm_y
+             ,z=trainData$gyros_forearm_z
+             ,xlab="Movement on X axis"
+             ,ylab="Movement on Y axis"
+             ,zlab="Movement on Z axis"
+             ,type='p'
+             ,pch=19
+             ,color=col2
+             ,main='Class by Forearm Movement')
+legend(forScatter$xyz.convert(3,4,-2), col=col, yjust=0,
+       legend=c("A","B","C","D","E"), cex=0.5, lwd=2)
+```  
+  
+We can see from some of the graphs that are is at least one outlier in the dataset that may impact the model. Were I doing regression, this observation would need to be reviewed more thoroughly, but because I'm using trees, I decided not to worry about this particular observation 
+
+#Modeling
+Models were evaluated on two key criteria:  
+1. Speed. Due to technological constraints (having an older computer and limited time), I did not pursue the random forest model because it took too long to run and evaluate.
+2. Accuracy. Models were compared based on accuracy when run against the validation set. 
+
+##Model 1: Simple RPart Tree
+Model 1 is an rpart tree using the `rpart` function and library. 
+```{r model1, cache=FALSE}
+accuracy <- function(values,prediction){sum((prediction == values))/length(values)}
+model1 <- rpart(classe~.,data=trainData,method="class")
+
+data.frame(training_set = accuracy(trainData$classe,predict(model1,newdata=trainData,type="class")),
+           validation_set = accuracy(validData$classe,predict(model1,newdata=validData,type="class")))
+```
+
+##Model 2: Simple CTree
+Model 2 is another tree model, built using the `ctree` and `caret` libraries.
+```{r model2}
+model2 <- train(classe~.,data=trainData,method="ctree")
+data.frame(training_set = accuracy(trainData$classe,predict(model2,newdata=trainData)),
+         validation_set = accuracy(validData$classe,predict(model2,newdata=validData)))
+```     
+
+##Model 3: CTree with Principal Component Analysis
+Model 3 is also built with the `ctree` modeling library, but also uses `caret` functionality to apply principle component analysis as preprocessing.
+```{r model3, cache=TRUE}
+model3 <- train(classe~.,data=trainData,method="ctree", preProcess="pca")
+data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=trainData)),
+         validation_set = accuracy(validData$classe,predict(model3,newdata=validData)))
+```
+
+#Results
+Of the 3 Models Evaluated, Model 2, CTree without PCA, performed the best on the validation set. 
+```{r results, cache=FALSE,results="asis"}
+bestModel <- model2
+print(xtable(table(trainData$classe,predict(bestModel,newdata=trainData,type="class")),caption="Performance in Training Set"),type="html")
+print(xtable(table(testData$classe,predict(bestModel,newdata=testData,type="class")),caption="Performance in Test Set"),type="html")
+
+print(xtable(data.frame(training_accuracy = 
+                 accuracy(trainData$classe,predict(bestModel,newdata=trainData,type="class")),
+            validation_accuracy = 
+                 accuracy(validData$classe,predict(bestModel,newdata=validData,type="class")),
+            testing_accuracy =
+                 accuracy(testData$classe ,predict(bestModel,newdata=testData,type="class")))),
+      type="html")
+```
+#References
+Data Generously provided by Velloso et al.
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+
+Read more: http://groupware.les.inf.puc-rio.br/har#ixzz3sA3HLCEL
