@@ -135,7 +135,7 @@ data.frame(training_set = accuracy(trainData$classe,predict(model1,newdata=train
 <pre class="r"><code>bestModel &lt;- model1
 print(xtable(table(trainData$classe,predict(bestModel,newdata=trainData,type=&quot;class&quot;)),caption=&quot;Performance in Training Set&quot;),type=&quot;html&quot;)</code></pre>
 <!-- html table generated in R 3.2.2 by xtable 1.8-0 package -->
-<!-- Sun Nov 22 09:55:29 2015 -->
+<!-- Sun Nov 22 09:57:24 2015 -->
 <table border="1">
 <caption align="bottom">
 Performance in Training Set
@@ -262,7 +262,7 @@ E
 </table>
 <pre class="r"><code>print(xtable(table(testData$classe,predict(bestModel,newdata=testData,type=&quot;class&quot;)),caption=&quot;Performance in Test Set&quot;),type=&quot;html&quot;)</code></pre>
 <!-- html table generated in R 3.2.2 by xtable 1.8-0 package -->
-<!-- Sun Nov 22 09:55:29 2015 -->
+<!-- Sun Nov 22 09:57:24 2015 -->
 <table border="1">
 <caption align="bottom">
 Performance in Test Set
@@ -395,7 +395,7 @@ E
                  accuracy(testData$classe ,predict(bestModel,newdata=testData,type=&quot;class&quot;)))),
       type=&quot;html&quot;)</code></pre>
 <!-- html table generated in R 3.2.2 by xtable 1.8-0 package -->
-<!-- Sun Nov 22 09:55:29 2015 -->
+<!-- Sun Nov 22 09:57:24 2015 -->
 <table border="1">
 <tr>
 <th>

@@ -134,25 +134,25 @@ data.frame(training_set = accuracy(trainData$classe,predict(model1,newdata=train
 ##Model 2: Simple CTree
 Model 2 is another tree model, built using the `ctree` and `caret` libraries.
 ```{r model2}
-#model2 <- train(classe~.,data=trainData,method="ctree")
-#model2 <- model2$finalModel
-#data.frame(training_set = #accuracy(trainData$classe,predict(model2,newdata=trainData)),
- #        validation_set = #accuracy(validData$classe,predict(model2,newdata=validData)))
+model2 <- train(classe~.,data=trainData,method="ctree")
+model2 <- model2$finalModel
+data.frame(training_set = accuracy(trainData$classe,predict(model2,newdata=trainData)),
+         validation_set = accuracy(validData$classe,predict(model2,newdata=validData)))
 ```     
 
 ##Model 3: CTree with Principal Component Analysis
 Model 3 is also built with the `ctree` modeling library, but also uses `caret` functionality to apply principle component analysis as preprocessing.
 ```{r model3, cache=TRUE}
-#model3 <- train(classe~.,data=trainData,method="ctree", preProcess="pca")
-#model3 <- model3$finalModel
-#data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=trainData)),
- #        validation_set = #accuracy(validData$classe,predict(model3,newdata=validData)))
+model3 <- train(classe~.,data=trainData,method="ctree", preProcess="pca")
+
+data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=trainData)),
+         validation_set = accuracy(validData$classe,predict(model3,newdata=validData)))
 ```
 
 #Results
 Of the 3 Models Evaluated, Model 2, CTree without PCA, performed the best on the validation set. 
 ```{r results, cache=FALSE,results="asis"}
-bestModel <- model1
+bestModel <- model2
 print(xtable(table(trainData$classe,predict(bestModel,newdata=trainData,type="class")),caption="Performance in Training Set"),type="html")
 print(xtable(table(testData$classe,predict(bestModel,newdata=testData,type="class")),caption="Performance in Test Set"),type="html")
 
