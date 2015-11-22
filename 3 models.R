@@ -55,8 +55,6 @@ xtable(table(trainData$classe,predict(model1,newdata=trainData,type="class")))
 bestModel <- model1
 xtable(table(trainData$classe,predict(bestModel,newdata=trainData,type="class")),caption="\\t Performance in Training Set")
 
-
-
 ##Model 2: Simple CTree
 model2 <- train(classe~.,data=trainData,method="ctree")
 data.frame(training_set = accuracy(trainData$classe,predict(model2,newdata=trainData)),
@@ -67,3 +65,20 @@ model3 <- train(classe~.,data=trainData,method="ctree", preProcess="pca")
 data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=trainData)),
         validation_set = accuracy(validData$classe,predict(model3,newdata=validData)))
 
+## Project Submission
+if (!file.exists('./data')) { dir.create('./data/') }
+if (!file.exists('./projectSubmission')) { dir.create('./projectSubmission/') }
+testURL<-'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv'
+download.file(testURL,method='auto',destfile='./data/test.csv')
+testFileData<-read.csv('./data/test.csv')
+answers <- predict(model2,newdata=testFileData)
+
+pml_write_files = function(x){
+     n = length(x)
+     for(i in 1:n){
+          filename = paste0("problem_id_",i,".txt")
+          write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+     }
+}
+setwd('./projectSubmission/')
+pml_write_files(answers)
