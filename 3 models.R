@@ -59,14 +59,11 @@ xtable(table(trainData$classe,predict(bestModel,newdata=trainData,type="class"))
 
 ##Model 2: Simple CTree
 model2 <- train(classe~.,data=trainData,method="ctree")
-model2 <- model2$finalModel
 data.frame(training_set = accuracy(trainData$classe,predict(model2,newdata=trainData)),
         validation_set = accuracy(validData$classe,predict(model2,newdata=validData)))
-    
 
 ##Model 3: CTree with Principal Component Analysis
 model3 <- train(classe~.,data=trainData,method="ctree", preProcess="pca")
-model3 <- model3$finalModel
 data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=trainData)),
         validation_set = accuracy(validData$classe,predict(model3,newdata=validData)))
 
