@@ -118,7 +118,8 @@ We can see from some of the graphs that are is at least one outlier in the datas
 
 #Modeling
 Models were evaluated on two key criteria:  
-1. Speed. Due to technological constraints (having an older computer and limited time), I did not pursue the random forest model because it took too long to run and evaluate.
+
+1. Speed. Due to technological constraints (having an older computer and limited time), I did not pursue the random forest model because it took too long to run and evaluate.  
 2. Accuracy. Models were compared based on accuracy when run against the validation set. 
 
 ##Model 1: Simple RPart Tree
@@ -133,7 +134,7 @@ data.frame(training_set = accuracy(trainData$classe,predict(model1,newdata=train
 
 ##Model 2: Simple CTree
 Model 2 is another tree model, built using the `ctree` and `caret` libraries.
-```{r model2, cache=TRUE}
+```{r model2, cache=TRUE,message=FALSE}
 model2 <- train(classe~.,data=trainData,method="ctree")
 data.frame(training_set = accuracy(trainData$classe,predict(model2,newdata=trainData)),
          validation_set = accuracy(validData$classe,predict(model2,newdata=validData)))
@@ -141,7 +142,7 @@ data.frame(training_set = accuracy(trainData$classe,predict(model2,newdata=train
 
 ##Model 3: CTree with Principal Component Analysis
 Model 3 is also built with the `ctree` modeling library, but also uses `caret` functionality to apply principle component analysis as preprocessing.
-```{r model3, cache=TRUE}
+```{r model3, cache=TRUE, message=FALSE}
 model3 <- train(classe~.,data=trainData,method="ctree", preProcess="pca")
 data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=trainData)),
          validation_set = accuracy(validData$classe,predict(model3,newdata=validData)))
@@ -149,10 +150,10 @@ data.frame(training_set = accuracy(trainData$classe,predict(model3,newdata=train
 
 #Results
 Of the 3 Models Evaluated, Model 2, CTree without PCA, performed the best on the validation set. 
-```{r results, cache=FALSE,results="asis"}
+```{r results, cache=FALSE,results="asis", message=FALSE}
 bestModel <- model2
 print(xtable(table(trainData$classe,predict(bestModel,newdata=trainData)),caption="Performance in Training Set"),type="html")
-print(xtable(table(testData$classe,predict(bestModel,newdata=testData,)),caption="Performance in Test Set",type="html"))
+print(xtable(table(testData$classe,predict(bestModel,newdata=testData,)),caption="Performance in Test Set"),type="html")
 
 print(xtable(data.frame(training_accuracy = 
                  accuracy(trainData$classe,predict(bestModel,newdata=trainData)),
